@@ -1,0 +1,4 @@
+.idea
+target/resolution-cache
+target/streams
+target/scala-2.12/classes
