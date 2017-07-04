@@ -1,3 +1,5 @@
+import java.net.InetAddress
+
 import akka.actor.{ActorSystem, PoisonPill, Props}
 import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings}
 import akka.http.scaladsl.Http
@@ -10,14 +12,17 @@ import akka.stream.ActorMaterializer
   */
 object Application extends App {
 
+  println(s"Local host IP: ${InetAddress.getLocalHost.getHostAddress}")
+  println("akka-cluster-poc: " + AppConfiguration.config.getAnyRef("akka-cluster-poc"))
+  println("akka.remote.netty.tcp: " + AppConfiguration.config.getAnyRef("akka.remote.netty.tcp"))
+  println("akka.cluster.seed-nodes: " + AppConfiguration.config.getAnyRef("akka.cluster.seed-nodes"))
 
-  implicit val system = ActorSystem(ClusteringConfig.clusterName)
+  implicit val system = ActorSystem(AppConfiguration.clusterName, AppConfiguration.config)
   implicit val materializer = ActorMaterializer()
   // needed for the future flatMap/onComplete in the end
   implicit val executionContext = system.dispatcher
 
   val clusterListener = system.actorOf(Props[ClusterListener], name = "clusterListener")
-  //val tickCounter = system.actorOf(Props[TickCounter], "tick-counter")
 
   val tickCounter = {
     val singletonProps = ClusterSingletonManager.props(
@@ -35,7 +40,7 @@ object Application extends App {
       }
     }
 
-  val bindingFuture = Http().bindAndHandle(route, "0.0.0.0", ClusteringConfig.httpPort)
+  val bindingFuture = Http().bindAndHandle(route, "0.0.0.0", AppConfiguration.httpPort)
 
   //  println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
   //  StdIn.readLine() // let it run until user presses return
