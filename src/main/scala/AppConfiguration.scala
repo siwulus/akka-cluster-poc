@@ -21,8 +21,6 @@ object AppConfiguration {
     val myIp = AWSInstanceConfiguration.selfEc2InstanceIp.get
     val myLocalIp = InetAddress.getLocalHost.getHostAddress
     val natConfig = ConfigFactory.empty()
-      .withValue("akka-cluster-poc.clustering.hostname", ConfigValueFactory.fromAnyRef(myIp))
-      .withValue("akka-cluster-poc.clustering.bind-hostname", ConfigValueFactory.fromAnyRef(myLocalIp))
       .withValue("akka.remote.netty.tcp.hostname", ConfigValueFactory.fromAnyRef(myIp))
       .withValue("akka.remote.netty.tcp.bind-hostname", ConfigValueFactory.fromAnyRef(myLocalIp))
 
@@ -30,7 +28,7 @@ object AppConfiguration {
       case Left(_) => natConfig.withFallback(originConfig.withFallback(originConfig))
       case Right(ips) => { natConfig.withValue("akka.cluster.seed-nodes",
         ConfigValueFactory.fromIterable(
-          ips.map(ip => s"akka.tcp://$clusterName@$ip:$clusterSeedPort")
+          (myIp::ips.filter(!_.equals(myIp))).map(ip => s"akka.tcp://$clusterName@$ip:$clusterSeedPort")
             .asJava))
         .withFallback(originConfig)
       }

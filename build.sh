@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-AWS_OWNER="921100211113"
+AWS_OWNER="???"
 
 sbt assembly
 docker build -t akka-cluster-poc .
